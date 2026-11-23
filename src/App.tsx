@@ -1,4 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { AuthProvider, useAuth } from './lib/AuthContext';
+import { MemberPortal } from './components/portal/MemberPortal';
+import { AdminPortal } from './components/portal/AdminPortal';
+import { AuthModal } from './components/auth/AuthModal';
+
+// Public Website Components
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
 import { MembershipSection } from './components/MembershipSection';
@@ -9,176 +15,142 @@ import { TrainerBooking } from './components/TrainerBooking';
 import { FitnessGallery } from './components/FitnessGallery';
 import { TestimonialSlider } from './components/TestimonialSlider';
 import { ContactSystem } from './components/ContactSystem';
-import { MemberDashboard } from './components/MemberDashboard';
-import { AdminDashboard } from './components/AdminDashboard';
 import { Footer } from './components/Footer';
-import { WebAppShell } from './components/WebAppShell';
 
-import { getMembers } from './lib/storage';
 import { MEMBERSHIP_PLANS } from './lib/supabase';
-import { MembershipPlan, MemberRecord, BookingRequest } from './types';
+import { MembershipPlan, MemberRecord } from './types';
 import { ironAudio } from './lib/ironAudio';
-import { Sparkles, X, Globe, Dumbbell } from 'lucide-react';
+import { Sparkles, User, ShieldAlert, Globe, ArrowRight } from 'lucide-react';
 
-export const App: React.FC = () => {
-  // App vs Website View Mode (defaults to 'app' for true SaaS Web Application experience)
-  const [viewMode, setViewMode] = useState<'app' | 'website'>('app');
+const MainApplication: React.FC = () => {
+  const { user, role, isAuthenticated, quickSwitchRole } = useAuth();
+  
+  // View mode: 'portal' (Member or Admin Portal) vs 'website' (Public Landing Site)
+  const [viewMode, setViewMode] = useState<'portal' | 'website'>('portal');
+  
+  // Auth Modal State
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [authModalMode, setAuthModalMode] = useState<'login' | 'register'>('login');
 
-  const [activeSection, setActiveSection] = useState('hero');
-  const [isMemberDashboardOpen, setIsMemberDashboardOpen] = useState(false);
-  const [isAdminDashboardOpen, setIsAdminDashboardOpen] = useState(false);
-  const [modalPlan, setModalPlan] = useState<MembershipPlan | null>(null);
-  const [members, setMembers] = useState<MemberRecord[]>(getMembers);
+  // Direct checkout modal from landing site
+  const [selectedPlanForCheckout, setSelectedPlanForCheckout] = useState<MembershipPlan | null>(null);
 
-  // Floating Toast Notification
-  const [toast, setToast] = useState<{ id: string; title: string; message: string } | null>(null);
-
-  const showToast = (title: string, message: string) => {
-    setToast({ id: `${Date.now()}`, title, message });
-    setTimeout(() => {
-      setToast(null);
-    }, 4500);
+  const handleOpenAuth = (mode: 'login' | 'register') => {
+    ironAudio.playClick();
+    setAuthModalMode(mode);
+    setAuthModalOpen(true);
   };
 
-  // Section Observer for Active Navigation in website mode
-  useEffect(() => {
-    if (viewMode !== 'website') return;
-
-    const sectionIds = ['hero', 'memberships', 'bmi', 'planner', 'trainers', 'gallery', 'contact'];
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setActiveSection(entry.target.id);
-          }
-        });
-      },
-      { threshold: 0.3 }
-    );
-
-    sectionIds.forEach((id) => {
-      const el = document.getElementById(id);
-      if (el) observer.observe(el);
-    });
-
-    return () => observer.disconnect();
-  }, [viewMode]);
-
-  const handleNavigate = (sectionId: string) => {
-    setActiveSection(sectionId);
-    const target = document.getElementById(sectionId);
-    if (target) {
-      target.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
-
-  const handleOpenJoinModal = (planId?: string) => {
-    const foundPlan = planId 
-      ? MEMBERSHIP_PLANS.find(p => p.id === planId)
-      : MEMBERSHIP_PLANS.find(p => p.isPopular) || MEMBERSHIP_PLANS[1];
-    setModalPlan(foundPlan || MEMBERSHIP_PLANS[0]);
-  };
-
-  const handleMemberRegistered = (newMember: MemberRecord) => {
-    setMembers(getMembers());
-    showToast(
-      'VIP Credential Minted!',
-      `Welcome to IRONVEX, ${newMember.fullName}. Member ID: ${newMember.memberNumber}`
-    );
-  };
-
-  const handleBookingCreated = (booking: BookingRequest) => {
-    showToast(
-      'Session Reserved!',
-      `Booked with ${booking.trainerName} for ${booking.date} at ${booking.timeSlot}. Code: ${booking.bookingCode}`
-    );
-  };
-
-  // 1. WEB APP MODE VIEW (Full-Screen SaaS Application Shell)
-  if (viewMode === 'app') {
-    return (
-      <div className="min-h-screen bg-iron-950 text-white selection:bg-gold-500 selection:text-black">
-        <WebAppShell
-          onSwitchToWebsite={() => {
-            ironAudio.playClick(900);
-            setViewMode('website');
-          }}
-          onOpenMembershipModal={(plan) => setModalPlan(plan || MEMBERSHIP_PLANS[1])}
+  // 1. PORTAL VIEW (When user is logged in or previewing Member / Admin portals)
+  if (viewMode === 'portal' && isAuthenticated) {
+    if (role === 'admin') {
+      return (
+        <AdminPortal
+          onSwitchToMember={() => quickSwitchRole('member')}
+          onSwitchToWebsite={() => setViewMode('website')}
         />
-
-        {/* Modal: Direct Membership Registration */}
-        {modalPlan && (
-          <MembershipModal
-            plan={modalPlan}
-            billingCycle="annual"
-            onClose={() => setModalPlan(null)}
-            onSuccess={(newMember) => {
-              handleMemberRegistered(newMember);
-              setModalPlan(null);
-            }}
-          />
-        )}
-
-        {/* Floating System Toast */}
-        {toast && (
-          <div className="fixed bottom-6 right-6 z-50 max-w-sm bg-iron-900 border-2 border-gold-500 rounded-xl p-4 shadow-2xl shadow-gold-500/20 animate-slideUp flex items-start space-x-3">
-            <div className="p-1 rounded-full bg-gold-500/20 text-gold-400 shrink-0">
-              <Sparkles className="w-5 h-5 text-gold-400" />
-            </div>
-            <div className="flex-1">
-              <h5 className="font-heading font-black text-xs uppercase tracking-wider text-white">
-                {toast.title}
-              </h5>
-              <p className="text-xs text-gray-300 mt-0.5 leading-relaxed">
-                {toast.message}
-              </p>
-            </div>
-            <button
-              onClick={() => setToast(null)}
-              className="text-gray-400 hover:text-white p-0.5"
-              aria-label="Dismiss toast"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-        )}
-      </div>
+      );
+    }
+    return (
+      <MemberPortal
+        onSwitchToAdmin={() => quickSwitchRole('admin')}
+        onSwitchToWebsite={() => setViewMode('website')}
+      />
     );
   }
 
-  // 2. PUBLIC WEBSITE SHOWCASE MODE VIEW (Scrollable marketing landing page)
+  // 2. PUBLIC MARKETING & SHOWCASE WEBSITE
   return (
     <div className="min-h-screen bg-iron-950 text-white selection:bg-gold-500 selection:text-black">
-      {/* Sticky Premium Navbar */}
+      
+      {/* Top Banner Ribbon with Direct Portal Switcher */}
+      <div className="bg-iron-950 border-b border-gold-500/20 py-2.5 px-4 text-xs font-mono">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
+          <div className="flex items-center space-x-2 text-gray-400">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+            <span className="text-white font-bold">IRONVEX PLATFORM ONLINE</span>
+            <span className="text-gray-600">|</span>
+            <span>TRAIN HARDER. GET STRONGER. LIVE BETTER.</span>
+          </div>
+
+          <div className="flex items-center space-x-3">
+            <button
+              onClick={() => {
+                quickSwitchRole('member');
+                setViewMode('portal');
+              }}
+              className="px-2.5 py-1 bg-gold-500/10 hover:bg-gold-500/20 text-gold-400 border border-gold-500/40 rounded text-[11px] font-bold flex items-center space-x-1"
+            >
+              <User className="w-3 h-3" />
+              <span>Launch Member Portal</span>
+            </button>
+
+            <button
+              onClick={() => {
+                quickSwitchRole('admin');
+                setViewMode('portal');
+              }}
+              className="px-2.5 py-1 bg-iron-900 hover:bg-iron-800 text-gray-300 border border-iron-700 rounded text-[11px] font-bold flex items-center space-x-1"
+            >
+              <ShieldAlert className="w-3 h-3 text-gold-400" />
+              <span>Launch Admin HQ</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Sticky Navbar */}
       <Navbar
-        activeSection={activeSection}
-        onNavigate={handleNavigate}
-        onOpenMembershipModal={handleOpenJoinModal}
-        onOpenMemberDashboard={() => setIsMemberDashboardOpen(true)}
-        onOpenAdminDashboard={() => setIsAdminDashboardOpen(true)}
-        onSwitchToApp={() => {
-          ironAudio.playClick(1100);
-          setViewMode('app');
+        activeSection="hero"
+        onNavigate={(id) => {
+          const el = document.getElementById(id);
+          if (el) el.scrollIntoView({ behavior: 'smooth' });
         }}
-        registeredMemberCount={members.length}
+        onOpenMembershipModal={() => setSelectedPlanForCheckout(MEMBERSHIP_PLANS[1])}
+        onOpenMemberDashboard={() => {
+          quickSwitchRole('member');
+          setViewMode('portal');
+        }}
+        onOpenAdminDashboard={() => {
+          quickSwitchRole('admin');
+          setViewMode('portal');
+        }}
+        onSwitchToApp={() => {
+          quickSwitchRole('member');
+          setViewMode('portal');
+        }}
+        registeredMemberCount={24}
       />
 
-      {/* Main Interactive Sections */}
       <main>
         <Hero
-          onJoinClick={() => handleOpenJoinModal()}
-          onBMIClick={() => handleNavigate('bmi')}
-          onPlannerClick={() => handleNavigate('planner')}
-          onTrainersClick={() => handleNavigate('trainers')}
+          onJoinClick={() => setSelectedPlanForCheckout(MEMBERSHIP_PLANS[1])}
+          onBMIClick={() => {
+            const el = document.getElementById('bmi');
+            if (el) el.scrollIntoView({ behavior: 'smooth' });
+          }}
+          onPlannerClick={() => {
+            const el = document.getElementById('planner');
+            if (el) el.scrollIntoView({ behavior: 'smooth' });
+          }}
+          onTrainersClick={() => {
+            const el = document.getElementById('trainers');
+            if (el) el.scrollIntoView({ behavior: 'smooth' });
+          }}
         />
 
-        <MembershipSection onMemberRegistered={handleMemberRegistered} />
+        <MembershipSection 
+          onMemberRegistered={() => {
+            quickSwitchRole('member');
+            setViewMode('portal');
+          }} 
+        />
 
         <BMICalculator />
 
         <WorkoutPlanner />
 
-        <TrainerBooking onBookingCreated={handleBookingCreated} />
+        <TrainerBooking />
 
         <FitnessGallery />
 
@@ -187,62 +159,40 @@ export const App: React.FC = () => {
         <ContactSystem />
       </main>
 
-      {/* Footer */}
       <Footer />
 
-      {/* Modal: Direct Membership Registration from Header/Hero */}
-      {modalPlan && (
+      {/* Auth Modal */}
+      {authModalOpen && (
+        <AuthModal
+          initialMode={authModalMode}
+          onClose={() => setAuthModalOpen(false)}
+          onSuccess={() => setViewMode('portal')}
+        />
+      )}
+
+      {/* Membership Modal */}
+      {selectedPlanForCheckout && (
         <MembershipModal
-          plan={modalPlan}
+          plan={selectedPlanForCheckout}
           billingCycle="annual"
-          onClose={() => setModalPlan(null)}
-          onSuccess={(newMember) => {
-            handleMemberRegistered(newMember);
-            setModalPlan(null);
+          onClose={() => setSelectedPlanForCheckout(null)}
+          onSuccess={() => {
+            setSelectedPlanForCheckout(null);
+            quickSwitchRole('member');
+            setViewMode('portal');
           }}
         />
       )}
 
-      {/* Modal: Member Athlete Dashboard */}
-      {isMemberDashboardOpen && (
-        <MemberDashboard
-          onClose={() => setIsMemberDashboardOpen(false)}
-          onOpenMembership={() => {
-            setIsMemberDashboardOpen(false);
-            handleOpenJoinModal();
-          }}
-        />
-      )}
-
-      {/* Modal: Executive Admin Command Center */}
-      {isAdminDashboardOpen && (
-        <AdminDashboard onClose={() => setIsAdminDashboardOpen(false)} />
-      )}
-
-      {/* Floating System Toast */}
-      {toast && (
-        <div className="fixed bottom-6 right-6 z-50 max-w-sm bg-iron-900 border-2 border-gold-500 rounded-xl p-4 shadow-2xl shadow-gold-500/20 animate-slideUp flex items-start space-x-3">
-          <div className="p-1 rounded-full bg-gold-500/20 text-gold-400 shrink-0">
-            <Sparkles className="w-5 h-5 text-gold-400" />
-          </div>
-          <div className="flex-1">
-            <h5 className="font-heading font-black text-xs uppercase tracking-wider text-white">
-              {toast.title}
-            </h5>
-            <p className="text-xs text-gray-300 mt-0.5 leading-relaxed">
-              {toast.message}
-            </p>
-          </div>
-          <button
-            onClick={() => setToast(null)}
-            className="text-gray-400 hover:text-white p-0.5"
-            aria-label="Dismiss toast"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-      )}
     </div>
+  );
+};
+
+export const App: React.FC = () => {
+  return (
+    <AuthProvider>
+      <MainApplication />
+    </AuthProvider>
   );
 };
 

@@ -82,6 +82,8 @@ export const MembershipModal: React.FC<MembershipModalProps> = ({
 
     const newMember: MemberRecord = {
       id: `mem-${Date.now()}`,
+      role: 'member',
+      fitnessGoal: 'strength',
       memberNumber: memberNum,
       qrCode: `${memberNum}-GOLD`,
       fullName: fullName.trim(),

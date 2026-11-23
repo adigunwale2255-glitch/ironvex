@@ -2,13 +2,14 @@ import { createClient } from '@supabase/supabase-js';
 import { MembershipPlan, TrainerProfile, TestimonialItem, GalleryItem } from '../types';
 
 // Supabase configuration with safe fallback
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://placeholder.supabase.co';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'placeholder-anon-key';
+const metaEnv = (import.meta as any).env || {};
+const supabaseUrl = metaEnv.VITE_SUPABASE_URL || 'https://placeholder.supabase.co';
+const supabaseAnonKey = metaEnv.VITE_SUPABASE_ANON_KEY || 'placeholder-anon-key';
 
 export const isSupabaseConfigured = Boolean(
-  import.meta.env.VITE_SUPABASE_URL && 
-  import.meta.env.VITE_SUPABASE_ANON_KEY &&
-  !import.meta.env.VITE_SUPABASE_URL.includes('placeholder')
+  metaEnv.VITE_SUPABASE_URL && 
+  metaEnv.VITE_SUPABASE_ANON_KEY &&
+  !metaEnv.VITE_SUPABASE_URL.includes('placeholder')
 );
 
 export const supabase = isSupabaseConfigured 
@@ -18,51 +19,57 @@ export const supabase = isSupabaseConfigured
 // Initial Membership Plans
 export const MEMBERSHIP_PLANS: MembershipPlan[] = [
   {
-    id: 'iron-access',
-    name: 'Iron Access',
-    tagline: 'Pure functional performance for dedicated lifters.',
+    id: 'plan-basic',
+    name: 'Basic',
+    tagline: 'Standard access for individual functional lifters.',
     priceMonthly: 49,
     priceAnnual: 39,
+    durationMonths: 1,
+    isActive: true,
     isPopular: false,
     features: [
-      'Full 24/7 access to free weights & Olympic platforms',
-      'High-performance cardio theater & turf area',
-      'Luxury locker rooms with digital keyless lock',
-      'Complimentary IRONVEX mobile workout tracker',
-      '1 Free body composition & BMI assessment'
+      'Full Gym floor & standard equipment access',
+      'Free weights & Olympic platforms',
+      'Locker room & digital lock access',
+      'Complimentary IRONVEX workout logging app',
+      '1 Initial physical fitness assessment'
     ]
   },
   {
-    id: 'pro-athlete',
-    name: 'Pro Athlete',
+    id: 'plan-pro',
+    name: 'Pro',
     tagline: 'Complete athletic conditioning with recovery amenities.',
     priceMonthly: 89,
     priceAnnual: 71,
+    durationMonths: 1,
+    isActive: true,
     isPopular: true,
-    badge: 'MOST PREFERRED',
+    badge: 'MOST POPULAR',
     features: [
-      'All Iron Access benefits included',
-      'Unlimited Infrared Sauna & Cold Plunge access',
-      'Full access to all Group HIIT, Spin & Box sessions',
+      'All Basic plan privileges included',
+      'Full access to all Group Fitness & HIIT classes',
+      'Infrared Nordic Sauna & Cold Plunge suite',
       '1 Monthly 1-on-1 Personal Training session',
-      'Custom macro & nutritional roadmap consultation',
-      '15% Discount on IRONVEX Pro Shop & Fuel Bar'
+      'Biometric body composition analysis',
+      '15% Discount on Pro Shop & Fuel Bar'
     ]
   },
   {
-    id: 'black-gold-vip',
-    name: 'Black Gold VIP',
-    tagline: 'The pinnacle of luxury fitness and bespoke coaching.',
+    id: 'plan-elite',
+    name: 'Elite',
+    tagline: 'The pinnacle of luxury fitness and master coaching.',
     priceMonthly: 149,
     priceAnnual: 119,
+    durationMonths: 1,
+    isActive: true,
     isPopular: false,
-    badge: 'EXCLUSIVE TIER',
+    badge: 'VIP TIER',
     features: [
-      'All Pro Athlete benefits included',
-      'Weekly dedicated 1-on-1 Master Trainer session',
-      'Executive private recovery lounge & percussion massage',
-      'Unlimited VIP guest passes for training partners',
-      'Private garment locker with daily towel & laundry service',
+      'All Pro plan privileges included',
+      'Weekly dedicated Master Coach 1-on-1 session',
+      'Private VIP executive recovery lounge',
+      'Unlimited guest passes for training partners',
+      'Dedicated locker with complimentary laundry',
       'Priority booking window for all trainers and equipment'
     ]
   }
@@ -75,12 +82,14 @@ export const SEED_TRAINERS: TrainerProfile[] = [
     name: 'Marcus "Vanguard" Stone',
     title: 'Head Strength & Powerlifting Coach',
     experienceYears: 12,
+    specialization: 'Powerlifting, Hypertrophy & Biomechanics',
     specialty: 'Powerlifting, Hypertrophy & Biomechanics',
     rating: 4.98,
     reviewsCount: 142,
     bio: 'Former national powerlifter and CSCS-certified strength coach specializing in raw bar speed, squat mechanics, and massive strength progression.',
     image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80',
     certifications: ['CSCS (NSCA)', 'USAW Level 2 Coach', 'FMS Certified'],
+    hourlyRate: 110,
     sessionRate: 110,
     availableDays: ['Monday', 'Wednesday', 'Friday', 'Saturday'],
     availableHours: ['07:00 AM', '09:00 AM', '11:00 AM', '03:00 PM', '05:00 PM']
@@ -90,12 +99,14 @@ export const SEED_TRAINERS: TrainerProfile[] = [
     name: 'Elena Rostova',
     title: 'Olympic Weightlifting & Mobility Specialist',
     experienceYears: 9,
+    specialization: 'Olympic Snatch & Clean, Mobility, Core Power',
     specialty: 'Olympic Snatch & Clean, Mobility, Core Power',
     rating: 4.96,
     reviewsCount: 118,
     bio: 'Master of sports in Olympic lifting. Elena guides athletes through precision mobility protocols and explosive power output without joint wear.',
     image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=800&q=80',
     certifications: ['USAW Senior Coach', 'Kinstretch Instructor', 'B.S. Kinesiology'],
+    hourlyRate: 105,
     sessionRate: 105,
     availableDays: ['Tuesday', 'Thursday', 'Saturday', 'Sunday'],
     availableHours: ['08:00 AM', '10:00 AM', '02:00 PM', '04:00 PM', '06:00 PM']
@@ -105,12 +116,14 @@ export const SEED_TRAINERS: TrainerProfile[] = [
     name: 'Darius Vance',
     title: 'High-Performance Conditioning & Body Transformation',
     experienceYears: 11,
+    specialization: 'Body Fat Shred, Athletic Conditioning, Nutrition',
     specialty: 'Body Fat Shred, Athletic Conditioning, Nutrition',
     rating: 4.99,
     reviewsCount: 165,
     bio: 'Darius has coached hundreds of executives and athletes to single-digit body fat and stage-ready conditioning with scientifically backed nutrition.',
     image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80',
     certifications: ['NASM-CPT', 'Precision Nutrition Level 2', 'EXOS Performance Specialist'],
+    hourlyRate: 120,
     sessionRate: 120,
     availableDays: ['Monday', 'Tuesday', 'Thursday', 'Friday'],
     availableHours: ['06:30 AM', '08:30 AM', '12:00 PM', '04:30 PM', '06:30 PM']
@@ -120,12 +133,14 @@ export const SEED_TRAINERS: TrainerProfile[] = [
     name: 'Seraphina Cruz',
     title: 'Functional Movement & Athletic Rehabilitation',
     experienceYears: 8,
+    specialization: 'Post-Injury Rehab, Posture Optimization, Longevity',
     specialty: 'Post-Injury Rehab, Posture Optimization, Longevity',
     rating: 4.95,
     reviewsCount: 94,
     bio: 'Doctor of Physical Therapy and certified personal trainer dedicated to bulletproofing shoulders, knees, and spines for pain-free heavy lifting.',
     image: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=800&q=80',
     certifications: ['DPT Physical Therapy', 'NASM-CES', 'PRI Postural Restoration'],
+    hourlyRate: 115,
     sessionRate: 115,
     availableDays: ['Wednesday', 'Thursday', 'Saturday'],
     availableHours: ['09:00 AM', '11:00 AM', '01:00 PM', '03:00 PM']
@@ -211,4 +226,3 @@ export const SEED_GALLERY: GalleryItem[] = [
     caption: 'Rainfall showers, eucalyptus infused towels, Dyson styling stations, and keyless biometric lockers.'
   }
 ];
-

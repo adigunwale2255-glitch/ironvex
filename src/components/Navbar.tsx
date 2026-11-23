@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, X, Dumbbell, Shield, User, Volume2, VolumeX, ChevronRight, Lock, Award, LayoutDashboard } from 'lucide-react';
+import { Menu, X, Dumbbell, Shield, User, Volume2, VolumeX, ChevronRight, Lock, Award, LayoutDashboard, Sparkles } from 'lucide-react';
 import { ironAudio } from '../lib/ironAudio';
 
 interface NavbarProps {
@@ -8,6 +8,7 @@ interface NavbarProps {
   onOpenMembershipModal: (planId?: string) => void;
   onOpenMemberDashboard: () => void;
   onOpenAdminDashboard: () => void;
+  onSwitchToApp?: () => void;
   registeredMemberCount: number;
 }
 
@@ -17,6 +18,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenMembershipModal,
   onOpenMemberDashboard,
   onOpenAdminDashboard,
+  onSwitchToApp,
   registeredMemberCount,
 }) => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -157,6 +159,21 @@ export const Navbar: React.FC<NavbarProps> = ({
               <LayoutDashboard className="w-4 h-4" />
             </button>
 
+            {/* Web App Mode Button */}
+            {onSwitchToApp && (
+              <button
+                onClick={() => {
+                  ironAudio.playClick(1200);
+                  onSwitchToApp();
+                }}
+                className="flex items-center gap-1.5 px-3.5 py-2 bg-gradient-to-r from-iron-800 to-iron-900 hover:from-iron-700 hover:to-iron-800 border-2 border-gold-400 text-gold-300 hover:text-white rounded text-xs font-mono font-bold tracking-wider uppercase transition-all shadow-gold-glow-sm"
+                title="Launch Web App Mode"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-gold-400" />
+                <span>Web App Mode</span>
+              </button>
+            )}
+
             {/* PRIMARY CTA: JOIN IRONVEX */}
             <button
               onClick={() => {
@@ -215,6 +232,19 @@ export const Navbar: React.FC<NavbarProps> = ({
           })}
 
           <div className="pt-3 border-t border-iron-800 flex items-center justify-between">
+            {onSwitchToApp && (
+              <button
+                onClick={() => {
+                  onSwitchToApp();
+                  setMobileMenuOpen(false);
+                }}
+                className="text-xs font-mono text-gold-400 font-bold flex items-center gap-1.5 py-2 px-2 bg-gold-500/10 rounded border border-gold-500/30"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Web App Mode</span>
+              </button>
+            )}
+
             <button
               onClick={() => {
                 onOpenMemberDashboard();

@@ -12,14 +12,18 @@ import { ContactSystem } from './components/ContactSystem';
 import { MemberDashboard } from './components/MemberDashboard';
 import { AdminDashboard } from './components/AdminDashboard';
 import { Footer } from './components/Footer';
+import { WebAppShell } from './components/WebAppShell';
 
-import { getMembers, saveMember } from './lib/storage';
+import { getMembers } from './lib/storage';
 import { MEMBERSHIP_PLANS } from './lib/supabase';
 import { MembershipPlan, MemberRecord, BookingRequest } from './types';
 import { ironAudio } from './lib/ironAudio';
-import { CheckCircle2, Sparkles, X } from 'lucide-react';
+import { Sparkles, X, Globe, Dumbbell } from 'lucide-react';
 
 export const App: React.FC = () => {
+  // App vs Website View Mode (defaults to 'app' for true SaaS Web Application experience)
+  const [viewMode, setViewMode] = useState<'app' | 'website'>('app');
+
   const [activeSection, setActiveSection] = useState('hero');
   const [isMemberDashboardOpen, setIsMemberDashboardOpen] = useState(false);
   const [isAdminDashboardOpen, setIsAdminDashboardOpen] = useState(false);
@@ -36,10 +40,11 @@ export const App: React.FC = () => {
     }, 4500);
   };
 
-  // Section Observer for Active Navigation
+  // Section Observer for Active Navigation in website mode
   useEffect(() => {
+    if (viewMode !== 'website') return;
+
     const sectionIds = ['hero', 'memberships', 'bmi', 'planner', 'trainers', 'gallery', 'contact'];
-    
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -57,7 +62,7 @@ export const App: React.FC = () => {
     });
 
     return () => observer.disconnect();
-  }, []);
+  }, [viewMode]);
 
   const handleNavigate = (sectionId: string) => {
     setActiveSection(sectionId);
@@ -89,6 +94,59 @@ export const App: React.FC = () => {
     );
   };
 
+  // 1. WEB APP MODE VIEW (Full-Screen SaaS Application Shell)
+  if (viewMode === 'app') {
+    return (
+      <div className="min-h-screen bg-iron-950 text-white selection:bg-gold-500 selection:text-black">
+        <WebAppShell
+          onSwitchToWebsite={() => {
+            ironAudio.playClick(900);
+            setViewMode('website');
+          }}
+          onOpenMembershipModal={(plan) => setModalPlan(plan || MEMBERSHIP_PLANS[1])}
+        />
+
+        {/* Modal: Direct Membership Registration */}
+        {modalPlan && (
+          <MembershipModal
+            plan={modalPlan}
+            billingCycle="annual"
+            onClose={() => setModalPlan(null)}
+            onSuccess={(newMember) => {
+              handleMemberRegistered(newMember);
+              setModalPlan(null);
+            }}
+          />
+        )}
+
+        {/* Floating System Toast */}
+        {toast && (
+          <div className="fixed bottom-6 right-6 z-50 max-w-sm bg-iron-900 border-2 border-gold-500 rounded-xl p-4 shadow-2xl shadow-gold-500/20 animate-slideUp flex items-start space-x-3">
+            <div className="p-1 rounded-full bg-gold-500/20 text-gold-400 shrink-0">
+              <Sparkles className="w-5 h-5 text-gold-400" />
+            </div>
+            <div className="flex-1">
+              <h5 className="font-heading font-black text-xs uppercase tracking-wider text-white">
+                {toast.title}
+              </h5>
+              <p className="text-xs text-gray-300 mt-0.5 leading-relaxed">
+                {toast.message}
+              </p>
+            </div>
+            <button
+              onClick={() => setToast(null)}
+              className="text-gray-400 hover:text-white p-0.5"
+              aria-label="Dismiss toast"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // 2. PUBLIC WEBSITE SHOWCASE MODE VIEW (Scrollable marketing landing page)
   return (
     <div className="min-h-screen bg-iron-950 text-white selection:bg-gold-500 selection:text-black">
       {/* Sticky Premium Navbar */}
@@ -98,6 +156,10 @@ export const App: React.FC = () => {
         onOpenMembershipModal={handleOpenJoinModal}
         onOpenMemberDashboard={() => setIsMemberDashboardOpen(true)}
         onOpenAdminDashboard={() => setIsAdminDashboardOpen(true)}
+        onSwitchToApp={() => {
+          ironAudio.playClick(1100);
+          setViewMode('app');
+        }}
         registeredMemberCount={members.length}
       />
 

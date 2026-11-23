@@ -1,0 +1,80 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  background-color: #060709;
+  color: #f3f4f6;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  overflow-x: hidden;
+}
+
+/* Custom Black & Gold Scrollbar */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0c0e12;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #252b39;
+  border-radius: 3px;
+  border: 1px solid #384154;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #d4af37;
+}
+
+/* Gold Metallic Text Gradient */
+.text-gold-gradient {
+  background: linear-gradient(135deg, #fff7d6 0%, #e5c058 35%, #d4af37 60%, #996515 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.text-gold-bright {
+  background: linear-gradient(135deg, #ffffff 0%, #fef3c7 40%, #f59e0b 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.text-silver-gradient {
+  background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 50%, #64748b 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Gold Glow Utilities */
+.shadow-gold-glow {
+  box-shadow: 0 0 25px -2px rgba(212, 175, 55, 0.4), 0 0 10px -1px rgba(212, 175, 55, 0.25);
+}
+
+.shadow-gold-glow-sm {
+  box-shadow: 0 0 14px -1px rgba(212, 175, 55, 0.3);
+}
+
+.shadow-gold-card {
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(212, 175, 55, 0.25);
+}
+
+/* Geometric Cuts */
+.clip-chamfer {
+  clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
+}
+
+.clip-badge {
+  clip-path: polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%);
+}
+
+.clip-slanted {
+  clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px));
+}

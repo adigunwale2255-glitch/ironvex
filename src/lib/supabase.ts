@@ -12,8 +12,8 @@ export const isSupabaseConfigured = Boolean(
   !metaEnv.VITE_SUPABASE_URL.includes('placeholder')
 );
 
-export const supabase = isSupabaseConfigured 
-  ? createClient(supabaseUrl, supabaseAnonKey) 
+export const supabase = isSupabaseConfigured
+  ? createClient(supabaseUrl, supabaseAnonKey)
   : null;
 
 // Initial Membership Plans
